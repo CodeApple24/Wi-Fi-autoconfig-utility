@@ -14,13 +14,13 @@ A lightweight, modern Windows desktop utility built with **Python** and **Custom
 
 ## Requirements
 - **OS:** Windows 10 or higher
-- **Python:** 3.8 or higher (if running from source)
-- **CustomTkinter** 5.2.0 or higher (if running from source)
+- **Python:** 3.8 or higher (if running source code)
+- **CustomTkinter** 5.2.0 or higher (if running source code)
 
 ## Installation & Running from Source
-- **To use source code:** Install dependencies (Python/CustomTkinter mentioned above), download source code from releases tab, and run.
+- **To use source code:** Install dependencies (Python/CustomTkinter mentioned above), download source code from the releases tab, and run.
 
-- **Pre-compiled Executable:** Alternatively, download the .exe from releases tab and run. Only requirement is being on Windows 10 or higher.
+- **Pre-compiled Executable:** Alternatively, download the .exe from the releases tab and run. The only requirement is using Windows 10 or higher.
 
 ## Preview
 <p align="center">
