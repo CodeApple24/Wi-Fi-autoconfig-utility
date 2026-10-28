@@ -24,6 +24,9 @@ def run_as_admin():
     )
     sys.exit(0)
 
+QUERY_CMD = 'wlan show autoconfig'
+NO_WINDOW_FLAG = subprocess.CREATE_NO_WINDOW
+
 # Dynamically fetch active wireless interface name
 def get_main_interface() -> str:
     try:
@@ -41,14 +44,6 @@ def get_main_interface() -> str:
     except Exception:
         pass
     return "Wi-Fi"
-
-
-WIFI_INTERFACE = get_main_interface()
-ENABLE_CMD = f'wlan set autoconfig enabled=yes interface="{WIFI_INTERFACE}"'
-DISABLE_CMD = f'wlan set autoconfig enabled=no interface="{WIFI_INTERFACE}"'
-QUERY_CMD = 'wlan show autoconfig'
-NO_WINDOW_FLAG = subprocess.CREATE_NO_WINDOW
-
 
 # Dynamically fetch current status of autoconfig setting (on or off)
 def get_autoconfig_status() -> bool:
@@ -74,9 +69,9 @@ def get_autoconfig_status() -> bool:
         return False
 
 #Run netsh command, used for autoconfig enabling/disabling
-def run_netsh_elevated(arguments):
+def run_netsh_elevated(args_list):
     try:
-        result = subprocess.run(["netsh"] + arguments.split(), capture_output=True, text=True, check=True, creationflags=NO_WINDOW_FLAG)
+        result = subprocess.run(["netsh"] + args_list, capture_output=True, text=True, check=True, creationflags=NO_WINDOW_FLAG)
         messagebox.showinfo("Success", "Command executed successfully!")
         return True
     except subprocess.CalledProcessError as e:
@@ -174,11 +169,13 @@ class Application:
 
     # Enable or disable autoconfig setting and trigger status label update
     def EnableAutoconfig(self):
-       if run_netsh_elevated(ENABLE_CMD):
+       interface = get_main_interface()
+       if run_netsh_elevated(["wlan", "set", "autoconfig", "enabled=yes", f"interface={interface}"]):
            self.on_autoconfig_enabled()
 
     def DisableAutoconfig(self):
-        if run_netsh_elevated(DISABLE_CMD):
+        interface = get_main_interface()
+        if run_netsh_elevated(["wlan", "set", "autoconfig", "enabled=no", f"interface={interface}"]):
             self.on_autoconfig_disabled()
 
     # Status label updater
