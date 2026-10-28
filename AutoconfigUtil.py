@@ -6,7 +6,11 @@ import sys
 import threading
 import time
 import platform
+import pystray
+import os
+import socket
 from tkinter import messagebox
+from PIL import Image
 
 if platform.system() != "Windows": 
     print("Error: Autoconfig Setter is only compatible with Windows")
@@ -24,8 +28,48 @@ def run_as_admin():
     )
     sys.exit(0)
 
+app_ref = None
+
+def enforce_single_instance():
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.bind(('127.0.0.1', 48921))
+        s.listen(1)
+        
+        def run_server():
+            while True:
+                try:
+                    conn, _ = s.accept()
+                    data = conn.recv(1024)
+                    conn.close()
+                    if data == b"SHOW" and app_ref:
+                        app_ref.root.after(0, app_ref.show_window)
+                except Exception:
+                    break
+                    
+        threading.Thread(target=run_server, daemon=True).start()
+        return True
+    except socket.error:
+        try:
+            client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            client.connect(('127.0.0.1', 48921))
+            client.sendall(b"SHOW")
+            client.close()
+        except Exception:
+            pass
+        return False
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base_path, relative_path)
+
 QUERY_CMD = 'wlan show autoconfig'
 NO_WINDOW_FLAG = subprocess.CREATE_NO_WINDOW
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+IMAGES_DIR = resource_path("images")
 
 # Dynamically fetch active wireless interface name
 def get_main_interface() -> str:
@@ -112,6 +156,16 @@ class Application:
         )
         apply_theme(root)
 
+        try:
+            root.iconbitmap(os.path.join(IMAGES_DIR, "icon.ico"))
+        except Exception:
+            pass
+
+        root.protocol("WM_DELETE_WINDOW", self.hide_window)
+
+        self.tray_icon = None
+        self.setup_tray()
+
         self.MainLabel = ctk.CTkLabel(root, text="Autoconfig Setter", text_color="#A7F3D0", font=ctk.CTkFont(family="Segoe Print", size=55), width=520, height=100)
         self.MainLabel.place(
             relx = 40/600,
@@ -161,6 +215,39 @@ class Application:
 
         self.update_status()
 
+    def setup_tray(self):
+        try:
+            icon_path = os.path.join(IMAGES_DIR, "icon.png")
+            image = Image.open(icon_path)
+            menu = pystray.Menu(
+                pystray.MenuItem("Show App", self.show_window, default=True),
+                pystray.MenuItem("Exit", self.exit_app)
+            )
+            self.tray_icon = pystray.Icon(
+                "AutoconfigSetter",
+                image,
+                "AutoconfigSetter",
+                menu
+            )
+            threading.Thread(target=self.tray_icon.run, daemon=True).start()
+        except Exception as e:
+            print(f"Failed to initalize system tray icon: {e}")
+            
+    def hide_window(self):
+        self.root.withdraw()
+
+    def show_window(self):
+        self.root.deiconify()
+        self.root.lift()
+        self.root.focus_force()
+
+    def exit_app(self):
+        if self.tray_icon:
+            self.tray_icon.stop()
+        self.root.quit()
+        sys.exit(0)
+
+
     # Change status label when autoconfig setting changes
     def on_autoconfig_enabled(self):
         self.label5.configure(text="Enabled", text_color="#44ab7b")
@@ -181,7 +268,6 @@ class Application:
 
     # Status label updater
     def update_status(self):
-        print("Called update!")
         if get_autoconfig_status():
             self.on_autoconfig_enabled()
         else:
@@ -220,10 +306,16 @@ class Application:
 if __name__ == "__main__":
     run_as_admin()
 
+    if not enforce_single_instance():
+        sys.exit(0)
+
     ctk.set_appearance_mode("dark")
 
     root = ctk.CTk()
     root.resizable(False, False)
     app = Application(root)
+
+    app_ref = app
+
     app.start_watcher()
     root.mainloop()
