@@ -6,7 +6,7 @@ A lightweight, modern Windows desktop utility built with **Python** and **Custom
 
 [![Download .exe](https://img.shields.io/badge/Download-Latest%20Release-blue?style=for-the-badge&logo=windows)](https://github.com/CodeApple24/Wi-Fi-autoconfig-utility/releases/latest)
 
-![App UI](assets/UIVisual.png)
+
 
 ## Features
 - **Instant Status Monitoring:** Background worker tracks state changes instantly (whether toggled inside the app or externally via terminal/settings).
