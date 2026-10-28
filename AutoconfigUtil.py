@@ -35,7 +35,8 @@ def get_main_interface() -> str:
             capture_output=True,
             text=True,
             errors="ignore",
-            check=True
+            check=True,
+            creationflags=NO_WINDOW_FLAG
         )
         match = re.search(r'Name\s*:\s*(.+)', result.stdout)
 
