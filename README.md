@@ -8,7 +8,7 @@ A lightweight, modern Windows desktop utility built with **Python** and **Custom
 ## Features
 - **Instant Status Monitoring:** Background worker tracks state changes instantly (whether toggled inside the app or externally via terminal/settings).
 - **Zero CPU Waste:** Uses a low-overhead background thread with sleep intervals (`<1%` CPU utilization on average).
-- **Dynamic Interface Detection:** Automatically discovers your active wireless network adapter name (<code style="white-space: nowrap;">Wi-Fi</code>, <code style="white-space: nowrap;">Wi-Fi 2</code>, etc.).
+- **Dynamic Interface Detection:** Automatically discovers the active wireless network adapter name (`Wi-Fi`, `Wi-Fi 2`, etc.).
 - **Modern UI:** Clean, dark-mode interface styled with CustomTkinter.
 - **UAC Elevation:** Automatically requests administrator permissions on startup to execute network configuration commands safely.
 
