@@ -11,6 +11,7 @@ A lightweight, modern Windows desktop utility built with **Python** and **Custom
 - **Dynamic Interface Detection:** Automatically finds the active wireless network adapter name (`Wi-Fi`, `Wi-Fi 2`, etc.).
 - **Modern UI:** Clean, dark-mode interface styled with CustomTkinter.
 - **UAC Elevation:** Automatically requests administrator permissions on startup to execute network configuration commands safely.
+- **System Tray Support:** Hides in system tray to enable easy use.
 
 ## Requirements
 - **OS:** Windows 10 or higher
