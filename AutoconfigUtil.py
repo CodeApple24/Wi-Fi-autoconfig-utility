@@ -5,8 +5,14 @@ import ctypes
 import sys
 import threading
 import time
+import platform
 from tkinter import messagebox
-'''
+
+if platform.system() != "Windows": 
+    print("Error: Autoconfig Setter is only compatible with Windows")
+    sys.exit(1)
+
+# Make sure code is running as admin
 def run_as_admin():
     if ctypes.windll.shell32.IsUserAnAdmin() != 0:
         return True
@@ -17,14 +23,34 @@ def run_as_admin():
         None, "runas", sys.executable, args, None, 0
     )
     sys.exit(0)
-'''
+
+# Dynamically fetch active wireless interface name
+def get_main_interface() -> str:
+    try:
+        result = subprocess.run(
+            ["netsh", "wlan", "show", "interfaces"],
+            capture_output=True,
+            text=True,
+            errors="ignore",
+            check=True
+        )
+        match = re.search(r'Name\s*:\s*(.+)', result.stdout)
+
+        if match:
+            return match.group(1).strip()
+    except Exception:
+        pass
+    return "Wi-Fi"
 
 
-ENABLE_CMD = 'wlan set autoconfig enabled=yes interface="Wi-Fi"'
-DISABLE_CMD = 'wlan set autoconfig enabled=no interface="Wi-Fi"'
+WIFI_INTERFACE = get_main_interface()
+ENABLE_CMD = f'wlan set autoconfig enabled=yes interface="{WIFI_INTERFACE}"'
+DISABLE_CMD = f'wlan set autoconfig enabled=no interface="{WIFI_INTERFACE}"'
 QUERY_CMD = 'wlan show autoconfig'
 NO_WINDOW_FLAG = subprocess.CREATE_NO_WINDOW
 
+
+# Dynamically fetch current status of autoconfig setting (on or off)
 def get_autoconfig_status() -> bool:
     try:
         result = subprocess.run(
@@ -47,7 +73,7 @@ def get_autoconfig_status() -> bool:
         print("System Error")
         return False
 
-
+#Run netsh command, used for autoconfig enabling/disabling
 def run_netsh_elevated(arguments):
     try:
         result = subprocess.run(["netsh"] + arguments.split(), capture_output=True, text=True, check=True, creationflags=NO_WINDOW_FLAG)
@@ -61,6 +87,7 @@ def run_netsh_elevated(arguments):
         return False
 
 
+# Create UI
 THEME_BG = "#232334"
 THEME_FG = "#1a1a1a"
 THEME_ACCENT = "#2a7de1"
@@ -138,12 +165,14 @@ class Application:
 
         self.update_status()
 
+    # Change status label when autoconfig setting changes
     def on_autoconfig_enabled(self):
         self.label5.configure(text="Enabled", text_color="#44ab7b")
 
     def on_autoconfig_disabled(self):
         self.label5.configure(text="Disabled", text_color="#d75656")
 
+    # Enable or disable autoconfig setting and trigger status label update
     def EnableAutoconfig(self):
        if run_netsh_elevated(ENABLE_CMD):
            self.on_autoconfig_enabled()
@@ -152,6 +181,7 @@ class Application:
         if run_netsh_elevated(DISABLE_CMD):
             self.on_autoconfig_disabled()
 
+    # Status label updater
     def update_status(self):
         print("Called update!")
         if get_autoconfig_status():
@@ -159,15 +189,11 @@ class Application:
         else:
             self.on_autoconfig_disabled()
 
-    def _event_callback(self, action, context, event):
-        if action == 1:
-            print("[+] EVENT DETECTED BY WINDOWS SUBSCRIPTION!")
-            self.root.after(0, self.update_status)
-    
+    # Poll autoconfig setting every 250ms~ to update status label
     def _event_listener_worker(self):
         former_status = get_autoconfig_status()
         while True:
-            time.sleep(0.5)
+            time.sleep(0.25)
             try:
                 status = get_autoconfig_status()
                 if status == former_status:
@@ -182,7 +208,7 @@ class Application:
             except Exception:
                 pass
 
-
+    # Trigger the listener function
     def start_watcher(self):
         watcher_thread = threading.Thread(
             target=self._event_listener_worker,
@@ -192,9 +218,9 @@ class Application:
 
         watcher_thread.start()
         
-
+# initiate app
 if __name__ == "__main__":
-    #run_as_admin()
+    run_as_admin()
 
     ctk.set_appearance_mode("dark")
 
