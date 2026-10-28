@@ -4,6 +4,8 @@ A lightweight, modern Windows desktop utility built with **Python** and **Custom
 
 ![App Screenshot](https://img.shields.io/badge/Platform-Windows-blue) ![License](https://img.shields.io/badge/License-MIT-green) ![Python](https://img.shields.io/badge/Python-3.8%2B-yellow)
 
+[![Download .exe](https://img.shields.io/badge/Download-Latest%20Release-blue?style=for-the-badge&logo=windows)](https://github.com/CodeApple24/Wi-Fi-autoconfig-utility/releases/latest)
+
 ## Features
 - **Instant Status Monitoring:** Background worker tracks state changes instantly (whether toggled inside the app or externally via terminal/settings).
 - **Zero CPU Waste:** Uses a low-overhead background thread with sleep intervals (`<1%` CPU utilization on average).
