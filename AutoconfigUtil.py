@@ -16,6 +16,7 @@ if platform.system() != "Windows":
     print("Error: Autoconfig Setter is only compatible with Windows")
     sys.exit(1)
 
+
 # Make sure code is running as admin
 def run_as_admin():
     if ctypes.windll.shell32.IsUserAnAdmin() != 0:
@@ -308,6 +309,7 @@ if __name__ == "__main__":
         sys.exit(0)
 
     run_as_admin()
+    
     
     ctk.set_appearance_mode("dark")
 
