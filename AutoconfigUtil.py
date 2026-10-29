@@ -304,11 +304,11 @@ class Application:
         
 # initiate app
 if __name__ == "__main__":
-    run_as_admin()
-
     if not enforce_single_instance():
         sys.exit(0)
 
+    run_as_admin()
+    
     ctk.set_appearance_mode("dark")
 
     root = ctk.CTk()
