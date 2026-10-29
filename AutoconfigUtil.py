@@ -30,35 +30,41 @@ def run_as_admin():
     sys.exit(0)
 
 app_ref = None
+server_socket = None
 
-def enforce_single_instance():
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+def is_instance_running() -> bool:
     try:
-        s.bind(('127.0.0.1', 48921))
-        s.listen(1)
-        
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client.connect(('127.0.0.1', 48921))
+        client.sendall(b"SHOW")
+        client.close()
+        return True
+    except (ConnectionRefusedError, socket.error):
+        return False
+
+def bind_single_instance_server() -> bool:
+    global server_socket
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        server_socket.bind(('127.0.0.1', 48921))
+        server_socket.listen(1)
+
         def run_server():
             while True:
                 try:
-                    conn, _ = s.accept()
+                    conn, _ = server_socket.accept()
                     data = conn.recv(1024)
                     conn.close()
                     if data == b"SHOW" and app_ref:
                         app_ref.root.after(0, app_ref.show_window)
                 except Exception:
-                    break
-                    
+                    continue
         threading.Thread(target=run_server, daemon=True).start()
         return True
-    except socket.error:
-        try:
-            client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            client.connect(('127.0.0.1', 48921))
-            client.sendall(b"SHOW")
-            client.close()
-        except Exception:
-            pass
+    except Exception:
         return False
+
 
 def resource_path(relative_path):
     try:
@@ -69,7 +75,6 @@ def resource_path(relative_path):
 
 QUERY_CMD = 'wlan show autoconfig'
 NO_WINDOW_FLAG = subprocess.CREATE_NO_WINDOW
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 IMAGES_DIR = resource_path("images")
 
 # Dynamically fetch active wireless interface name
@@ -130,13 +135,6 @@ def run_netsh_elevated(args_list):
 
 # Create UI
 THEME_BG = "#232334"
-THEME_FG = "#1a1a1a"
-THEME_ACCENT = "#2a7de1"
-THEME_ACCENT_FG = "#ffffff"
-THEME_FIELD_BG = "#ffffff"
-THEME_FONT_FAMILY = "Helvetica"
-THEME_FONT_SIZE = 10
-
 
 def apply_theme(root):
     """Apply the project theme to a window. CustomTkinter styles per widget,
@@ -163,6 +161,9 @@ class Application:
             pass
 
         root.protocol("WM_DELETE_WINDOW", self.hide_window)
+
+        self.is_visible = threading.Event()
+        self.is_visible.set()
 
         self.tray_icon = None
         self.setup_tray()
@@ -235,12 +236,15 @@ class Application:
             print(f"Failed to initalize system tray icon: {e}")
             
     def hide_window(self):
+        self.is_visible.clear()
         self.root.withdraw()
 
     def show_window(self):
         self.root.deiconify()
         self.root.lift()
         self.root.focus_force()
+        self.update_status()
+        self.is_visible.set()
 
     def exit_app(self):
         if self.tray_icon:
@@ -274,11 +278,13 @@ class Application:
         else:
             self.on_autoconfig_disabled()
 
-    # Poll autoconfig setting every 250ms~ to update status label
+    # Poll autoconfig setting every 1~ second to update status label
     def _event_listener_worker(self):
         former_status = get_autoconfig_status()
         while True:
-            time.sleep(0.25)
+            self.is_visible.wait()
+
+            time.sleep(1)
             try:
                 status = get_autoconfig_status()
                 if status == former_status:
@@ -305,11 +311,13 @@ class Application:
         
 # initiate app
 if __name__ == "__main__":
-    if not enforce_single_instance():
+    if is_instance_running():
         sys.exit(0)
 
     run_as_admin()
-    
+
+    if not bind_single_instance_server():
+        sys.exit(0)
     
     ctk.set_appearance_mode("dark")
 
