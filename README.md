@@ -41,7 +41,7 @@ This project relies on the following open-source libraries and frameworks:
 
 * **[Python](https://python.org)** — Created by the Python Software Foundation. Licensed under the [PSF License].
   * *Used for: Core programming language and runtime environment.*
-* **[CustomTkinter](https://github.com/tomschimansky/customtkinter)** — Developed by Tom Schimansky. Licensed under the [MIT License](https://github.com/blob/master/LICENSE).
+* **[CustomTkinter](https://github.com/tomschimansky/customtkinter)** — Developed by Tom Schimansky. Licensed under the [MIT License].
   * *Used for: Modern, customizable graphical user interface (GUI) elements.*
 * **[pystray](https://github.com/moses-palmer/pystray)** — Developed by Moses Palmér. Licensed under the [GNU Lesser General Public License v3.0 (LGPLv3)].
   * *Used for:* System tray icon management and cross-platform tray background threading.
