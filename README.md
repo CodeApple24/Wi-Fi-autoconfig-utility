@@ -6,8 +6,8 @@ A lightweight, modern Windows desktop utility built with **Python** and **Custom
 [![Download .exe](https://img.shields.io/badge/Download-Latest%20Release-blue?style=for-the-badge&logo=windows)](https://github.com/CodeApple24/Wi-Fi-autoconfig-utility/releases/latest)
 
 ## Features
-- **Instant Status Monitoring:** Background worker tracks state changes instantly (whether toggled inside the app or externally via terminal/settings).
-- **Zero CPU Waste:** Uses a low-overhead background thread with sleep intervals (`<1%` CPU utilization on average).
+- **Status Monitoring:** Background worker tracks state changes rapidly (whether toggled inside the app or externally via terminal/settings).
+- **Low CPU Usage:** Uses a low-overhead background thread with sleep intervals (`<1%` CPU utilisation on average).
 - **Dynamic Interface Detection:** Automatically finds the active wireless network adapter name (`Wi-Fi`, `Wi-Fi 2`, etc.).
 - **Modern UI:** Clean, dark-mode interface styled with CustomTkinter.
 - **UAC Elevation:** Automatically requests administrator permissions on startup to execute network configuration commands safely.
@@ -21,7 +21,7 @@ A lightweight, modern Windows desktop utility built with **Python** and **Custom
 - **Pillow** 10.0.0 or higher (if running source code)
 
 ## Installation & Running from Source
-- **To use source code:** Install dependencies (Python/CustomTkinter/Pystray/Pillow mentioned above), download source code from the releases tab, and run.
+- **To use source code:** Install dependencies (Python/CustomTkinter/Pystray/Pillow mentioned above), download source code, and run.
 
 - **Pre-compiled Executable:** Alternatively, download the .exe from the releases tab and run. The only requirement is using Windows 10 or higher.
 
