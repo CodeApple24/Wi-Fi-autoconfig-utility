@@ -1,21 +1,40 @@
-import customtkinter as ctk
-import subprocess
-import re
-import ctypes
 import sys
-import threading
-import time
 import platform
-import pystray
-import os
 import socket
-from tkinter import messagebox
-from PIL import Image
 
 if platform.system() != "Windows": 
     print("Error: Autoconfig Setter is only compatible with Windows")
     sys.exit(1)
 
+def is_instance_running() -> bool:
+    try:
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        client.settimeout(0.5)
+        client.connect(('127.0.0.1', 48921))
+        client.sendall(b"SHOW")
+        client.close()
+        return True
+    except (ConnectionRefusedError, socket.error, socket.timeout):
+        return False
+
+if __name__ == "__main__":
+    if is_instance_running():
+        sys.exit(0)
+
+import customtkinter as ctk
+import pystray
+import os
+import subprocess
+import re
+import ctypes
+import threading
+import time
+from tkinter import messagebox
+from PIL import Image
+
+app_ref = None
+server_socket = None
 
 # Make sure code is running as admin
 def run_as_admin():
@@ -29,24 +48,13 @@ def run_as_admin():
     )
     sys.exit(0)
 
-app_ref = None
-server_socket = None
-
-def is_instance_running() -> bool:
-    try:
-        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client.connect(('127.0.0.1', 48921))
-        client.sendall(b"SHOW")
-        client.close()
-        return True
-    except (ConnectionRefusedError, socket.error):
-        return False
 
 def bind_single_instance_server() -> bool:
     global server_socket
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        server_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         server_socket.bind(('127.0.0.1', 48921))
         server_socket.listen(1)
 
@@ -215,7 +223,8 @@ class Application:
             anchor="center"
         )
 
-        self.update_status()
+        root.after(50, self.update_status)
+        
 
     def setup_tray(self):
         try:
@@ -247,8 +256,15 @@ class Application:
         self.is_visible.set()
 
     def exit_app(self):
+        global server_socket
         if self.tray_icon:
             self.tray_icon.stop()
+        if server_socket:
+            try:
+                server_socket.close()
+            except Exception:
+                pass
+        
         self.root.quit()
         sys.exit(0)
 
@@ -311,9 +327,6 @@ class Application:
         
 # initiate app
 if __name__ == "__main__":
-    if is_instance_running():
-        sys.exit(0)
-
     run_as_admin()
 
     if not bind_single_instance_server():
