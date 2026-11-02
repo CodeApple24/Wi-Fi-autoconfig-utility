@@ -30,11 +30,38 @@ import re
 import ctypes
 import threading
 import time
+import winreg
 from tkinter import messagebox
 from PIL import Image
 
 app_ref = None
 server_socket = None
+APP_REG_KEY = "AutoconfigSetter"
+
+def is_startup_enabled() -> bool:
+    try:
+        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Run", 0, winreg.KEY_READ)
+        winreg.QueryValueEx(key, APP_REG_KEY)
+        winreg.CloseKey(key)
+        return True
+    except Exception:
+        return False
+
+def toggle_startup():
+    try:
+        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Run", 0, winreg.KEY_WRITE)
+        if is_startup_enabled():
+            try:
+                winreg.DeleteValue(key, APP_REG_KEY)
+            except FileNotFoundError:
+                pass
+        else:
+            exe_path = f'"{sys.executable}"'
+            winreg.SetValueEx(key, APP_REG_KEY, 0, winreg.REG_SZ, exe_path)
+        winreg.CloseKey(key)
+        
+    except Exception as e:
+        print(f"Failed to toggle startup setting: {e}")
 
 # Make sure code is running as admin
 def run_as_admin():
@@ -173,6 +200,8 @@ class Application:
         self.is_visible = threading.Event()
         self.is_visible.set()
 
+        self.startup_var = ctk.BooleanVar(value=is_startup_enabled())
+
         self.tray_icon = None
         self.setup_tray()
 
@@ -204,6 +233,13 @@ class Application:
             anchor="nw"
         )
 
+        self.checkbutton1 = ctk.CTkCheckBox(root, text="Launch on Start-Up", variable=self.startup_var,command=toggle_startup, text_color="#d0c3c3", font=ctk.CTkFont(family="Segoe UI", size=12), width=170, height=30)
+        self.checkbutton1.place(
+        relx=10/600,
+        rely=410/450,
+        anchor="nw"
+        )
+
         self.StatusFrame = ctk.CTkFrame(
             root,
             fg_color="transparent",
@@ -222,6 +258,7 @@ class Application:
             rely = 320/450,
             anchor="center"
         )
+
 
         root.after(50, self.update_status)
         
